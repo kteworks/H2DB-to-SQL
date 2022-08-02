@@ -77,8 +77,6 @@ public class Main {
 			Class.forName("org.h2.Driver");
 
 			try (Connection conn = DriverManager.getConnection(JDBC_URL, DB_USER, DB_PASS)) {
-
-				StringBuilder command = new StringBuilder();
 				int cnt = 0;
 				for (String table : tables) {
 					String sql = "SELECT * FROM " + table;
@@ -125,6 +123,7 @@ public class Main {
 			cnt2 = 0;
 			sb.append(" );");
 			RunCommandForPostgre(url, sb.toString());
+			sb.delete(0, sb.length());
 			cnt1++;
 		}
 	}
