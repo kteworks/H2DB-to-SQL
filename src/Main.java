@@ -10,10 +10,20 @@ import java.util.List;
 public class Main {
 
 	public static void main(String[] args) {
-		// コピー元JDBC情報
-		String JDBC_URL = "jdbc:h2:tcp://localhost/~/RPGDB";
-		String DB_USER = "sa";
-		String DB_PASS = "";
+		// コピー元H2データベース JDBC情報
+		String JDBC_URL = "jdbc:h2:tcp://";			// サーバーアドレス
+		String DB_USER = "";						// ユーザー名
+		String DB_PASS = "";						// パスワード
+
+		// 移行先 PostgreSQL データベース情報
+		String HOST = "";							// ホスト名
+		String toDB_NAME = "";						// データベース名
+		String PORT = "";							// ポート番号
+		String toDB_USER = "";						// ユーザー名
+		String toDB_PASS = "";						// パスワード
+		String toJDBC_URL = "jdbc:postgresql://" + HOST + ":" + PORT + "/" + toDB_NAME + "?sslmode=require" + "?user=" + toDB_USER
+				+ "&password=" + toDB_PASS;
+
 
 		// テーブル名格納
 		List<String> tables = new ArrayList<String>();
@@ -39,8 +49,8 @@ public class Main {
 					sql = "SELECT COL.COLUMN_NAME AS COLUMN_NAME, COL.DATA_TYPE AS DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS COL WHERE COL.TABLE_SCHEMA = SCHEMA() AND COL.TABLE_NAME = '"
 							+ table + "' ORDER BY COL.TABLE_NAME, COL.ORDINAL_POSITION";
 					pStmt = conn.prepareStatement(sql);
+					System.out.println("実行中コマンド:" + sql);
 					rs = pStmt.executeQuery();
-					//System.out.println(table);
 					ArrayList<String[]> list = new ArrayList<String[]>();
 					while (rs.next()) {
 						String[] column = new String[2];
@@ -62,25 +72,20 @@ public class Main {
 			e.printStackTrace();
 		}
 
-		String HOST = "ec2-34-193-44-192.compute-1.amazonaws.com";
-		String toDB_NAME = "de81jcg0ffo4th";
-		String PORT = "5432";
-		String toDB_USER = "qmlxmlqaqlyauk";
-		String toDB_PASS = "86de3290ea25ece6f7128b7b1b3ff277d284dbcb0403c20c51677b47063e1cc4";
-
-		String toJDBC_URL = "jdbc:postgresql://" + HOST + ":" + PORT + "/" + toDB_NAME + "?user=" + toDB_USER
-				+ "&password=" + toDB_PASS;
-
+		// 移行先のテーブル、カラム作成
 		CreateTablesForPostgre(toJDBC_URL, tables, columns);
 
+		// コピー元のH2 Databaseにアクセス
 		try {
 			Class.forName("org.h2.Driver");
-
 			try (Connection conn = DriverManager.getConnection(JDBC_URL, DB_USER, DB_PASS)) {
 				int cnt = 0;
+
+				// 各テーブルのレコード取得
 				for (String table : tables) {
 					String sql = "SELECT * FROM " + table;
 					PreparedStatement pStmt = conn.prepareStatement(sql);
+					System.out.println("実行中コマンド:" + sql);
 					ResultSet rs = pStmt.executeQuery();
 					while (rs.next()) {
 						ArrayList<String[]> column = columns.get(cnt);
@@ -91,6 +96,7 @@ public class Main {
 							else
 								data.add(rs.getString(str[0]));
 						}
+						// 移行先のPstgreSQLにレコードを追加
 						RunCommandForPostgre(toJDBC_URL, OutputInsertCommand(table, data));
 					}
 					cnt++;
@@ -102,10 +108,10 @@ public class Main {
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
 		}
-
-		System.out.println("Success");
+		System.out.println("プログラムを終了します。");
 	}
 
+	// 移行先のテーブル、カラム作成メソッド
 	static void CreateTablesForPostgre(String url, List<String> tables, List<ArrayList<String[]>> columns) {
 
 		StringBuilder sb = new StringBuilder();
@@ -128,6 +134,7 @@ public class Main {
 		}
 	}
 
+	// PostgreSQLに戻り値のないコマンドを実行するメソッド
 	static void RunCommandForPostgre(String url, String sql) {
 
 		try {
@@ -138,7 +145,7 @@ public class Main {
 				// 自動コミットOFF
 				conn.setAutoCommit(false);
 				Statement pStmt = conn.createStatement();
-				System.out.println(sql);
+				System.out.println("実行中コマンド:" + sql);
 				pStmt.execute(sql);
 				conn.commit();
 			} catch (SQLException e) {
@@ -149,6 +156,7 @@ public class Main {
 		}
 	}
 
+	// レコード追加コマンド文字列出力
 	static String OutputInsertCommand(String table, ArrayList<String> datas) {
 		int cnt = 0;
 		StringBuilder sb = new StringBuilder();
@@ -168,6 +176,7 @@ public class Main {
 		return sb.toString();
 	}
 
+	// 文字列をint型数値に変換可能か確認
 	public static boolean TryParseInt(String val) {
 		try {
 			Integer.parseInt(val);
