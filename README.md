@@ -15,16 +15,23 @@ H2 DatabaseからPostgreSQLにデータを移行するプログラムです。
 flowchart TD
 db[(H2 Database)]
 todb[(移行先データベース)]
-    subgraph Main
-        subgraph main
-            main1([実行]) --> main2[/移行前のH2の情報を入力<br>移行先のPostgreSQLの情報を入力/]  -->　db --> main3(テーブル名<br>カラム名データ型取得) --> main4[[移行先テーブル<br>カラム 作成]] --> 移行先テーブルカラム作成 --> db --> main5([各テーブルのレコード取得]) --> main6(取得したレコードから<br>SQLコマンドを生成) --> 戻り値なしのSQLコマンドを実行 --> mainfin([プログラム終了])
-        end
-        subgraph 移行先テーブルカラム作成
-            tcc1([実行]) --> tcc2(取得したテーブル名から<br>テーブル作成コマンドを生成) --> db --> SQLコマンドを実行 --> tcc3(取得したテーブル名から<br>カラム作成コマンドを生成) --> SQLコマンドを実行
-        end
-        subgraph 戻り値なしのSQLコマンドを実行
-            rc4s1([実行]) --> todb --> rc4s2([引数で渡されたコマンドを実行]) --> rc4s3([終了])
-        end
+    subgraph main
+        mainrun([実行]) --> main1[/移行前のH2の情報を入力<br>移行先のPostgreSQLの情報を入力/] --> main2[[テーブル名<br>カラム名データ型取得]] --> main3[[移行先テーブル<br>カラム作成]] --> main4[[レコード取得,移行]] --> mainfin([プログラム終了])
+    end
+    subgraph テーブル名<br>カラム名データ型取得
+        gtcrun([実行]) --> gtc1[[移行前のSQLからデータを取得]] -->  gtc2(フィールドに<br>テーブル名カラム名を代入) --> gtcfin([終了])
+    end
+    subgraph レコード取得,移行
+        agrrun([実行]) --> agr1[[移行前のSQLからデータを取得]] --> agr2(レコードを代入) --> agr3[[移行先SQLにデータを追加]] --> agrfin([終了])
+    end
+    subgraph 移行先テーブルカラム作成
+        tccrun([実行]) --> tcc1(取得したテーブル名から<br>テーブル作成コマンドを生成) --> tcc2[[戻り値なしのSQLコマンドを実行]] --> tcc3(取得したテーブル名から<br>カラム作成コマンドを生成) --> tccfin[[戻り値なしのSQLコマンドを実行]]
+    end
+    subgraph 移行先SQLにデータを追加
+        rc1([実行]) --> todb --> rc2([引数で渡されたコマンドを実行])--> rc3([終了])
+    end
+    subgraph 移行前のSQLからデータを取得
+        rcrs1([実行]) --> db --> rcrs2([引数で渡されたコマンドを実行]) --> 結果を返す --> rcrs4([終了])
     end
 ```
 
