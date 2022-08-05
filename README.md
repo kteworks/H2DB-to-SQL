@@ -20,8 +20,6 @@ end
 
 ```mermaid
 flowchart TD
-db[(H2 Database)]
-todb[(移行先データベース)]
 subgraph テーブル名<br>カラム名データ型取得
     gtcrun([実行]) --> gtc1[[移行前のSQLからデータを取得]] -->  gtc2(フィールドに<br>テーブル名カラム名を代入) --> gtcfin([終了])
 end
@@ -34,6 +32,9 @@ end
 ```
 
 ```mermaid
+flowchart TD
+db[(H2 Database)]
+todb[(移行先データベース)]
 subgraph 移行先SQLにデータを追加
         rc1([実行]) --> todb --> rc2([引数で渡されたコマンドを実行])--> rc3([終了])
 end
