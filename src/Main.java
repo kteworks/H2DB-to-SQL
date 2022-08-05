@@ -16,7 +16,7 @@ public class Main {
 	static String DB_URL = "jdbc:h2:tcp://";	// サーバーアドレス
 	static String DB_USER = ""; 				// ユーザー名
 	static String DB_PASS = ""; 				// パスワード
-	static String JDBC_URL =  DB_URL +"?sslmode=require" + "?user=" + DB_USER + "&password=" + DB_PASS;
+	static String JDBC_URL =  DB_URL + "?user=" + DB_USER + "&password=" + DB_PASS;
 
 	// 移行先 PostgreSQL データベース情報
 	static String HOST = ""; 					// ホスト名
@@ -69,10 +69,10 @@ public class Main {
 				ArrayList<String[]> list = new ArrayList<String[]>();
 				while (rs.next()) {
 					String[] column = new String[2];
-					column[0] = rs.getString("COLUMN_NAME");
-					column[1] = rs.getString("DATA_TYPE");
-					if (column[1].equals("CHARACTER VARYING"))
-						column[1] = "VARCHAR";
+					column[0] = rs.getString("COLUMN_NAME").toUpperCase();
+					column[1] = rs.getString("DATA_TYPE").toUpperCase();
+					if (column[1].indexOf("CHARACTER VARYING") > -1)
+						column[1].replace("CHARACTER VARYING", "VARCHAR");
 					else if (column[1].equals("CHARACTER"))
 						column[1] = "CHAR";
 					list.add(column);
