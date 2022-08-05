@@ -96,7 +96,7 @@ public class Main {
 							else
 								data.add(rs.getString(str[0]));
 						}
-						// 移行先のPstgreSQLにレコードを追加
+						// 移行先のPostgreSQLにレコードを追加
 						RunCommandForPostgre(toJDBC_URL, OutputInsertCommand(table, data));
 					}
 					cnt++;
